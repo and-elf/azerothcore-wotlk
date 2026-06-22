@@ -10,5 +10,6 @@ namespace Branding
         _fragmentItem = sConfigMgr->GetOption<uint32_t>("Branding.Economy.FragmentItemId", 190001);
         _schoolFragments = sConfigMgr->GetOption<bool>("Branding.Economy.SchoolFragments.Enable", false);
         _schoolFragmentBase = sConfigMgr->GetOption<uint32_t>("Branding.Economy.SchoolFragmentBaseItemId", 190100);
+        _fragmentDropChance = sConfigMgr->GetOption<float>("Branding.Economy.FragmentDropChance", 0.0f);
     }
 }

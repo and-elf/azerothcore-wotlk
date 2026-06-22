@@ -4,6 +4,7 @@
 #include "DatabaseEnv.h"
 #include "Log.h"
 #include "Player.h"
+#include "Random.h"
 
 namespace Branding
 {
@@ -55,6 +56,41 @@ namespace Branding
         } while (result->NextRow());
 
         LOG_INFO("server.loading", ">> Loaded {} branding recipes.", count);
+    }
+
+    void EconomyMgr::LoadCreatureSchools()
+    {
+        // §9/§16 faucet: authored creature_entry -> brand school map. Repopulated from scratch so
+        // `.reload config` picks up edits. Empty is fine -- the faucet simply drops nothing.
+        _creatureSchools.Clear();
+        if (!_config.Enabled())
+            return;
+
+        QueryResult result = WorldDatabase.Query(
+            "SELECT `creature_entry`, `brand` FROM `branding_creature_school`");
+        if (!result)
+        {
+            LOG_INFO("server.loading", ">> Loaded 0 branding creature-school rows (table empty).");
+            return;
+        }
+
+        uint32 count = 0;
+        do
+        {
+            Field* fields = result->Fetch();
+            uint32 const entry = fields[0].Get<uint32>();
+            uint32 const brand = fields[1].Get<uint32>();
+            if (brand >= static_cast<uint32>(BrandId::COUNT))
+            {
+                LOG_WARN("server.loading", "branding_creature_school entry {} skipped: brand {} out of range.",
+                    entry, brand);
+                continue;
+            }
+            _creatureSchools.Set(entry, static_cast<BrandId>(brand));
+            ++count;
+        } while (result->NextRow());
+
+        LOG_INFO("server.loading", ">> Loaded {} branding creature-school mapping(s).", count);
     }
 
     CraftReport EconomyMgr::Craft(Player* player, uint32_t recipeId)
@@ -118,5 +154,29 @@ namespace Branding
 
         report.outcome = CraftOutcome::Crafted;
         return report;
+    }
+
+    bool EconomyMgr::TryDropFragment(Player* killer, uint32_t creatureEntry)
+    {
+        // Gated on the economy + per-school Fragments being on and a configured drop chance; the
+        // faucet is inert otherwise (default off). Materials/generic Fragments are not dropped here --
+        // this faucet exists specifically to source the per-school Fragments (§9/§16).
+        if (!killer || !_config.Enabled() || !_config.SchoolFragmentsEnabled())
+            return false;
+
+        float const chance = _config.FragmentDropChance();
+        if (chance <= 0.0f)
+            return false;
+
+        BrandId school = BrandId::COUNT;
+        if (!_creatureSchools.Resolve(creatureEntry, school))
+            return false;   // creature not mapped -> no drop
+
+        if (!roll_chance_f(chance))
+            return false;
+
+        DeliveryResult const delivered = DeliverItem(killer, _config.SchoolFragmentItem(school), 1,
+            "Branding", "A Branded Fragment, still warm from the kill.");
+        return delivered != DeliveryResult::None;
     }
 }
