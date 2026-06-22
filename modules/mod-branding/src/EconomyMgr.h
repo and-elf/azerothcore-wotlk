@@ -2,6 +2,7 @@
 #define MOD_BRANDING_SRC_ECONOMYMGR_H
 
 #include "EconomyConfig.h"
+#include "branding/economy/CreatureSchool.h"
 #include "branding/economy/RecipeBook.h"
 #include <cstdint>
 
@@ -41,8 +42,10 @@ namespace Branding
 
         void LoadConfig();
         void LoadRecipes();
+        void LoadCreatureSchools();
         bool Enabled() const { return _config.Enabled(); }
         std::size_t RecipeCount() const { return _recipes.Size(); }
+        std::size_t CreatureSchoolCount() const { return _creatureSchools.Size(); }
 
         uint32_t MaterialItem() const { return _config.MaterialItem(); }
         uint32_t FragmentItem() const { return _config.FragmentItem(); }
@@ -50,11 +53,18 @@ namespace Branding
         // Attempt to craft `recipeId` for `player`. No raw Player pointer is stored.
         CraftReport Craft(Player* player, uint32_t recipeId);
 
+        // §9/§16 faucet: on a creature kill, if the creature is mapped in branding_creature_school and
+        // per-school Fragments + a drop chance are configured, roll and (on success) deliver one of
+        // that school's Fragments to the killer. Returns true when a Fragment was delivered. No raw
+        // Player pointer is stored.
+        bool TryDropFragment(Player* killer, uint32_t creatureEntry);
+
     private:
         EconomyMgr() = default;
 
         EconomyConfig _config;
         RecipeBook _recipes;
+        CreatureSchoolTable _creatureSchools;
     };
 }
 

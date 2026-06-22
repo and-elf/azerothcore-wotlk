@@ -28,12 +28,17 @@ namespace Branding
             return _schoolFragmentBase + static_cast<uint32_t>(school);
         }
 
+        // §9/§16 faucet: percent chance (0..100) that killing a creature mapped in
+        // branding_creature_school drops one of its school's Fragments. 0 disables the drop.
+        float FragmentDropChance() const { return _fragmentDropChance; }
+
     private:
         bool _enabled = false;
         uint32_t _materialItem = 190000;   // Branding Material (BoE; mirrors the event reward, §16.3/§16.4)
         uint32_t _fragmentItem = 190001;   // generic Branding Fragment (BoA; raid/invasion-sourced)
         bool _schoolFragments = false;     // route schooled recipes to per-school Fragments (§16)
         uint32_t _schoolFragmentBase = 190100;  // <School>-Branded Fragment band base (190100 + BrandId)
+        float _fragmentDropChance = 0.0f;  // creature-kill school-Fragment drop chance, percent (§9/§16)
     };
 }
 

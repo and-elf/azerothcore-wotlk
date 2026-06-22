@@ -671,6 +671,18 @@ Branding.Economy.SchoolFragments.Enable = 0
 Branding.Economy.SchoolFragmentBaseItemId = 190100
 
 #
+#    Branding.Economy.FragmentDropChance
+#        Description: §9/§16 faucet. Percent chance (0..100) that killing a creature mapped in the
+#                     branding_creature_school table drops one of its school's per-school Fragments
+#                     to the killer (inventory, mail fallback). Requires SchoolFragments.Enable. 0
+#                     disables the drop entirely (so the faucet is opt-in). Unmapped creatures never
+#                     drop. Exotic schools are sourced by authoring themed bosses into the table.
+#        Default:     0 - (disabled)
+#
+
+Branding.Economy.FragmentDropChance = 0
+
+#
 #    Branding.Item.Enable
 #        Description: Item branding (§7.9): brand + upgrade the equipped weapon to raise its proc/
 #                     behavior intensity (never flat stats). Inert without the account's Knowledge.

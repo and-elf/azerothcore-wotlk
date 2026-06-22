@@ -2049,9 +2049,17 @@ config and is the right call:
   craft spell's `Reagent`) route which Fragment *item* a school draws from — the same DI trick that keeps
   `core/` host-free. School `>= BrandId::COUNT` (or the feature disabled) falls back to the generic
   Fragment, so pre-§16 recipes and configs keep working. Anti-P2W is unchanged: per-school Fragments are
-  still BoA and power still gates on account *Knowledge*, never on holding a Fragment. *(The faucet side —
-  events granting the school-aligned Fragment — is follow-up; this slice ships the crafting **sink** and
-  the resource items.)*
+  still BoA and power still gates on account *Knowledge*, never on holding a Fragment.
+- **Per-school Fragment faucet — creature drops (§9/§16).** The first source of per-school Fragments is
+  an authored `branding_creature_school` map (`creature_entry → BrandId`): on a kill, if the creature is
+  mapped and `Branding.Economy.SchoolFragments.Enable` + `Branding.Economy.FragmentDropChance` are set,
+  the killer rolls for one of that school's Fragments (inventory, mail fallback). It is **authored, not
+  derived** — a live `Creature*` has no reliable damage school, and the exotic schools (§7.10) have no
+  creature archetype — so "fire elemental → Fire" and "void boss → Void" are both just rows; exotic
+  Fragments are sourced by mapping themed bosses. The pure `CreatureSchoolTable` (`core/branding/economy/`)
+  holds the map; `EconomyMgr::TryDropFragment` rolls + delivers, reusing the §16 `SchoolFragmentItem`.
+  *(Event-aligned grants — an invasion handing out its alignment's Fragment through the §9 reward path —
+  remain the natural second faucet; refining classic Fragments into exotic is a noted, easily-added sink.)*
 - Trade-off (bag clutter, stack caps) is mitigated by the vault and generous stack sizes; no new
   client work. A custom currency table was rejected (needs bespoke UI, breaks trading, duplicates the
   inventory plumbing already built).
@@ -2077,7 +2085,7 @@ representation.)
 - **SQL tables — two families** (the shipped pattern; follow it):
   - **Definition / content** — read-mostly world data loaded into a core registry, in `acore_world`:
     `branding_<noun>` (`branding_recipe`, `branding_event_def`, `branding_event_spawn`,
-    `branding_zone_bracket`, `branding_discovery_object`).
+    `branding_zone_bracket`, `branding_discovery_object`, `branding_creature_school`).
   - **Per-entity state** — mutable, keyed by an existing AzerothCore entity id/GUID, in
     `acore_characters` / `acore_auth`: `<entity>_branding[_<detail>]` (`character_branding`,
     `character_branding_discovery`, `item_branding`).

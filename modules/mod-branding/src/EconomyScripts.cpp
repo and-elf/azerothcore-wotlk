@@ -2,6 +2,7 @@
 #include "mod_branding_loader.h"
 #include "Chat.h"
 #include "CommandScript.h"
+#include "Creature.h"
 #include "Player.h"
 #include "RBAC.h"
 #include "ScriptMgr.h"
@@ -9,7 +10,8 @@
 using namespace Acore::ChatCommands;
 using namespace Branding;
 
-// Loads/refreshes economy config on startup and on `.reload config`, and (re)loads the recipe table.
+// Loads/refreshes economy config on startup and on `.reload config`, and (re)loads the recipe table
+// and the creature-school faucet map.
 class BrandingEconomyWorldScript : public WorldScript
 {
 public:
@@ -19,6 +21,24 @@ public:
     {
         sEconomyMgr->LoadConfig();
         sEconomyMgr->LoadRecipes();
+        sEconomyMgr->LoadCreatureSchools();
+    }
+};
+
+// §9/§16 faucet: a creature kill may drop the per-school Fragment its entry is mapped to in
+// branding_creature_school. The decision (mapping + roll + delivery) lives in EconomyMgr; this hook
+// only forwards the kill. Inert unless the economy, per-school Fragments and a drop chance are set.
+class BrandingFragmentDropPlayerScript : public PlayerScript
+{
+public:
+    BrandingFragmentDropPlayerScript() : PlayerScript("BrandingFragmentDropPlayerScript") { }
+
+    void OnPlayerCreatureKill(Player* killer, Creature* killed) override
+    {
+        if (!killer || !killed)
+            return;
+
+        sEconomyMgr->TryDropFragment(killer, killed->GetEntry());
     }
 };
 
@@ -84,5 +104,6 @@ public:
 void AddBrandingEconomyScripts()
 {
     new BrandingEconomyWorldScript();
+    new BrandingFragmentDropPlayerScript();
     new branding_economy_commandscript();
 }
